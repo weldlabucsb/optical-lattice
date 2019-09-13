@@ -8,9 +8,10 @@ k = 1
 m = 1
 ER = ct.hbar**2*k**2/(2*m)
 #jmax:
-jmax = 2
-def sin_potential(x, V0 = 30, k = 1):
+jmax = 1
+def sin_potential(x, V0 = 100, k = 1):
     return V0*np.power(np.sin(k*x),2)
+
 def fourier_series_coeff_numpy(f, T, N, return_complex=True):
     """Calculates the first 2*N+1 Fourier series coeff. of a periodic function.
 
@@ -64,11 +65,14 @@ def fourier_series_coeff_numpy(f, T, N, return_complex=True):
         return y[0].real, y[1:-1].real, -y[1:-1].imag
 
 Vj = fourier_series_coeff_numpy(sin_potential, np.pi/k, jmax)
-print(Vj)
+print(f"V0 = {Vj[0]}, V1 = {Vj[1]}") # , V2 = {Vj[2]}, V3 = {Vj[3]}")
+print(f"V0 = {Vj[0]}, V-1 = {np.conj(Vj[1])}")
 Vj = np.pad(Vj, (0,jmax), 'constant', constant_values = (0,))
 print(Vj.shape)
+
+
 def central_eq_solv(q, jmax = 20):
-    C = np.zeros((jmax+1, jmax+1))
+    C = np.zeros((2*jmax+1, 2*jmax+1), dtype=complex)
     it = np.nditer(C, flags=['multi_index'], op_flags=['writeonly'])
     with it:
         while not it.finished:
@@ -84,15 +88,21 @@ def central_eq_solv(q, jmax = 20):
                 it[0] = V0
                 #print("%d <%s>" % (V0, it.multi_index), end=' ')
             it.iternext()
-    return np.linalg.eig(C)
+    print(C)
+    return np.linalg.eigh(C)
+
+
 w, v = central_eq_solv(0.5, jmax=jmax)    
 print(w)
 
-Q = np.linspace(-10*k, 10*k, 1000)
+Q = np.linspace(-1*k, 1*k, 10)
 E = []
 for q in Q:
     w, v = central_eq_solv(q, jmax=jmax)
     E.append(np.sort(w))
 E = np.array(E).T
-plt.plot(Q, E[0], Q ,E[1], Q, E[2])
+print(E)
+print(E.shape)
+for band in E:
+    plt.plot(Q, band)
 plt.show()
