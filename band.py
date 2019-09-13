@@ -8,7 +8,9 @@ import matplotlib.pyplot as plt
 class BandSolver:
     ###Class intended to contain all the tools needed for solving band problems.
     def fourier_series_coeff_1D(self, f, T, N, return_complex=True):
-        """Calculates the first 2*N+1 Fourier series coeff. of a periodic function.
+        """
+        Credit for this method to gg349 from Stack Overflow (https://stackoverflow.com/a/27720302)
+        Calculates the first 2*N+1 Fourier series coeff. of a periodic function.
 
         Given a periodic, function f(t) with period T, this function returns the
         coefficients a0, {a1,a2,...},{b1,b2,...} such that:
