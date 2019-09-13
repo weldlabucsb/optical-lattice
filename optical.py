@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.integrate as integrate
+import pickle as pk
 
 class Ewave():
     #general wave considered as a collection of plane waves
@@ -105,14 +106,14 @@ class Epwave():
 #k vectors:
 kmag = 2*np.pi
 k1 = kmag*np.array([1,0,0])
-k2 = kmag*np.array([0,1,0])
-k3 = kmag*np.array([-1,0,0])
+k2 = kmag*np.array([-1,0,0])
+k3 = kmag*np.array([0,1,0])
 k4 = kmag*np.array([0,-1,0])
 #amplitudes:
 e1, e2, e3, e4 = 0.6,1,0.55,1
 #phases:
-ph = [0, 90, 0, -75]
-ph1, ph2, ph3, ph4 = list(map(lambda x: x*np.pi/180, ph))
+ph = [0, 90, 0, -75, 45]
+ph1, ph2, ph3, ph4, ph5 = list(map(lambda x: x*np.pi/180, ph))
 #polarization:
 p1,p2,p3,p4 = np.array([0,0,1]),np.array([0,0,1]), np.array([0,0,1]), np.array([0,0,1])
 #angular freq:
@@ -124,14 +125,19 @@ E1 = Epwave(e1, p1, w, k1, ph1)
 E2 = Epwave(e2, p2, w, k2, ph2)
 E3 = Epwave(e3, p3, w, k3, ph3)
 E4 = Epwave(e4, p4, w, k4, ph4)
+E5 = Epwave(e4, p4, w, k4, ph5)
 
 Sum = E1+E2+E3+E4
 
-X = np.arange(3, step=0.01)
-Y = np.arange(3,  step=0.01)
+X = np.arange(2, step=0.01)
+Y = np.arange(2,  step=0.01)
 xx, yy = np.meshgrid(X, Y)
 zz = np.zeros(xx.shape)
 Z = Sum.tavg_intensity(xx, yy, 0)
+#save intensity in pickle to avoid recalculating
+intensity_file = open("Intensity", "ab")
+pk.dump(Z, intensity_file)
+
 print(f"value = {Z}")
 h = plt.contourf(xx, yy, Z)
 plt.show()
