@@ -32,7 +32,7 @@ E5 = op.Epwave(e4, p4, w, k4, ph5)
 #creation of the wave packet.
 Sum = E1+E2+E3+E4
 #rotates all the beams in the wave packet.
-Sum.rotate_beams(135, [0,0,1]) #rotate the beams by 45 degrees around the z axis.
+Sum.rotate_beams(90, [0,0,1]) #rotate the beams by 45 degrees around the z axis.
 
 X = np.arange(2, step=0.01)
 Y = np.arange(2,  step=0.01)
