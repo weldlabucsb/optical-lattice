@@ -53,7 +53,7 @@ class Ewave():
             angle *= np.pi/180
         rot = self._rotation_matrix(angle, axis)
         for i in range(len(self.Epwaves)):
-            self.Epwaves[i] = np.dot(rot, self.Epwaves[i])
+            self.Epwaves[i].kvector = np.dot(rot, self.Epwaves[i].kvector)
 
     def value(self, t, x, y, z, time = True):
         sum = 0
