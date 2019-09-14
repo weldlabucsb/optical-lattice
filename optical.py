@@ -106,9 +106,11 @@ class Epwave():
     def rvalue(self, x, y, z):
         #provides the value of the position part of the field at x, y, z. Time dependency is ignored. Useful when summing plane waves with same periodicity.
         r = []
-        if isinstance(z, int) and isinstance(x, np.ndarray):
-            r = np.vstack([ x.reshape(-1), y.reshape(-1), np.zeros(x.shape).reshape(-1)])
+        if isinstance(z, int) and isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
+            r = np.vstack([ x.reshape(-1), y.reshape(-1), np.full(x.shape, z).reshape(-1)])
             #print(r)
+        elif isinstance(z, int) and isinstance(y, int) and isinstance(x, np.ndarray):
+            r = np.vstack([ x.reshape(-1), np.full(x.shape, y).reshape(-1), np.full(x.shape, z).reshape(-1)])
         else:
             r = np.vstack((x,y,z))  
         kprod = np.dot(self.kvector, r)  
