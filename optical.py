@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.integrate as integrate
 import pickle as pk
+import math
 
 class Ewave():
     #general wave considered as a collection of plane waves
@@ -26,7 +27,33 @@ class Ewave():
         self.same_freq = res
         if self.same_freq:
             self.w = w1
-
+    def _rotation_matrix(self, angle, axis):
+        """
+        gets the rotation matrix for rotating a vector.
+        angle must be in radians!
+        Credit: https://stackoverflow.com/a/6802723 unutbu
+        Using the Euler-Rodrigues formula:
+        """
+        axis = np.asarray(axis)
+        #normalize the axis
+        axis = axis / math.sqrt(np.dot(axis, axis))
+        a = math.cos(angle / 2.0)
+        b, c, d = -axis * math.sin(angle / 2.0)
+        aa, bb, cc, dd = a * a, b * b, c * c, d * d
+        bc, ad, ac, ab, bd, cd = b * c, a * d, a * c, a * b, b * d, c * d
+        return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
+                        [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
+                        [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
+    def rotate_beams(self, angle, axis, deg = True):
+        """
+        Rotate all beams by an angle around a given axis in the wave packet.
+        Using the Euler-Rodrigues formula:
+        """
+        if deg:
+            angle *= np.pi/180
+        rot = self._rotation_matrix(angle, axis)
+        for i in range(len(self.Epwaves)):
+            self.Epwaves[i] = np.dot(rot, self.Epwaves[i])
 
     def value(self, t, x, y, z, time = True):
         sum = 0
@@ -43,12 +70,15 @@ class Ewave():
         #calculates the intensity of the packet of plane waves (square of field value)
         return np.abs(self.value(t, x, y, z))**2
 
-    def tavg_intensity(self, x, y, z):
+    def tavg_intensity(self, x, y, z, savefile = ""):
         if self.same_freq:
             #if all waves have the same angular frequency:
             res = np.linalg.norm(self.value(0, x, y, z, time=False), axis=0) #provide a dummy time if time is set to false.
             if isinstance(x, np.ndarray):
-                return res.reshape(x.shape)
+                res = res.reshape(x.shape)
+            if savefile != "":
+                with open(savefile, 'ab') as file:
+                    pk.dump(res, file)
             return res
         else:
             return "Not Implemented"
@@ -101,45 +131,45 @@ class Epwave():
         copy.append(self)
         return Ewave(copy)
 
-##test of class with four waves:
-#we set lambda = 1 = c thus lambda = 1, kmag = 2*pi, w = 1/(2*pi)
-#k vectors:
-kmag = 2*np.pi
-k1 = kmag*np.array([1,0,0])
-k2 = kmag*np.array([-1,0,0])
-k3 = kmag*np.array([0,1,0])
-k4 = kmag*np.array([0,-1,0])
-#amplitudes:
-e1, e2, e3, e4 = 0.6,1,0.55,1
-#phases:
-ph = [0, 90, 0, -75, 45]
-ph1, ph2, ph3, ph4, ph5 = list(map(lambda x: x*np.pi/180, ph))
-#polarization:
-p1,p2,p3,p4 = np.array([0,0,1]),np.array([0,0,1]), np.array([0,0,1]), np.array([0,0,1])
-#angular freq:
-w = 1/(2*np.pi)
+# ##test of class with four waves:
+# #we set lambda = 1 = c thus lambda = 1, kmag = 2*pi, w = 1/(2*pi)
+# #k vectors:
+# kmag = 2*np.pi
+# k1 = kmag*np.array([1,0,0])
+# k2 = kmag*np.array([-1,0,0])
+# k3 = kmag*np.array([0,1,0])
+# k4 = kmag*np.array([0,-1,0])
+# #amplitudes:
+# e1, e2, e3, e4 = 0.6,1,0.55,1
+# #phases:
+# ph = [0, 90, 0, -75, 45]
+# ph1, ph2, ph3, ph4, ph5 = list(map(lambda x: x*np.pi/180, ph))
+# #polarization:
+# p1,p2,p3,p4 = np.array([0,0,1]),np.array([0,0,1]), np.array([0,0,1]), np.array([0,0,1])
+# #angular freq:
+# w = 1/(2*np.pi)
 
-#initialization of Ep waves:
+# #initialization of Ep waves:
 
-E1 = Epwave(e1, p1, w, k1, ph1)
-E2 = Epwave(e2, p2, w, k2, ph2)
-E3 = Epwave(e3, p3, w, k3, ph3)
-E4 = Epwave(e4, p4, w, k4, ph4)
-E5 = Epwave(e4, p4, w, k4, ph5)
+# E1 = Epwave(e1, p1, w, k1, ph1)
+# E2 = Epwave(e2, p2, w, k2, ph2)
+# E3 = Epwave(e3, p3, w, k3, ph3)
+# E4 = Epwave(e4, p4, w, k4, ph4)
+# E5 = Epwave(e4, p4, w, k4, ph5)
 
-Sum = E1+E2+E3+E4
+# Sum = E1+E2+E3+E4
 
-X = np.arange(2, step=0.01)
-Y = np.arange(2,  step=0.01)
-xx, yy = np.meshgrid(X, Y)
-zz = np.zeros(xx.shape)
-Z = Sum.tavg_intensity(xx, yy, 0)
-#save intensity in pickle to avoid recalculating
-intensity_file = open("Intensity", "ab")
-pk.dump(Z, intensity_file)
+# X = np.arange(2, step=0.01)
+# Y = np.arange(2,  step=0.01)
+# xx, yy = np.meshgrid(X, Y)
+# zz = np.zeros(xx.shape)
+# Z = Sum.tavg_intensity(xx, yy, 0)
+# #save intensity in pickle to avoid recalculating
+# intensity_file = open("Intensity", "ab")
+# pk.dump(Z, intensity_file)
 
-print(f"value = {Z}")
-h = plt.contourf(xx, yy, Z)
-plt.show()
-print(Sum.value(1,1,1,1))
-print(Sum.tavg_intensity(1,1,1))
+# print(f"value = {Z}")
+# h = plt.contourf(xx, yy, Z)
+# plt.show()
+# print(Sum.value(1,1,1,1))
+# print(Sum.tavg_intensity(1,1,1))
