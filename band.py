@@ -99,7 +99,7 @@ class BandSolver:
                 i, j = it.multi_index #{i,j} represents the row and column currently being read and writen.
                 #if in the diagonal:
                 if i == j:
-                    it[0] = (2*(j-self.jmax)+q/k)**2+self.Vj[0] #comes from the 1D periodic bloch equation check Lab Book #1 p. 108 by Enrique Morell
+                    it[0] = (2*(j-self.jmax)+q/self.k)**2+self.Vj[0] #comes from the 1D periodic bloch equation check Lab Book #1 p. 108 by Enrique Morell
                 else:
                     V0 = self.Vj[np.abs(j-i)] #the vertical distance to your diagonal gives you the index of the fourier coefficient to be put in there.
                     if i<j: #we are above the diagonal
