@@ -3,6 +3,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import optical as op
 import band
+import pickle
 
 
 ##test of class with four waves:
@@ -36,27 +37,51 @@ Sum.rotate_beams(90, [0,0,1]) #rotate the beams by 45 degrees around the z axis.
 
 X = np.arange(2, step=0.01)
 Y = np.arange(2,  step=0.01)
+
 xx, yy = np.meshgrid(X, Y)
 zz = np.zeros(xx.shape)
 
 Z = Sum.tavg_intensity(xx, yy, 0, savefile="intensity_2D")
+Y1 = np.linspace(0,1,2)
+
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# for y in Y1:
+#     pot2 = lambda x: Sum.tavg_intensity(x, y, 0)
+#     POT = pot2(X)
+    
+#     ax.plot(X, POT)
+
 
 print(f"value = {Z}")
-fig1, ax1 = plt.subplots()
+
+fig1 = plt.figure()
+ax1 = fig1.add_subplot(111)
 ax1.contourf(xx, yy, Z)
 ax1.set_title("Potential for the Kitaev Chain")
 ax1.set_xlabel("Position x")
 ax1.set_ylabel("Position y")
-X = np.linspace(0,2, 3)
-Ex = []
-Q = []
-for x in X:
-    pot = lambda x: Sum.tavg_intensity(x, 0.5, 0)
-    _band = band.BandSolver(pot, 15, kmag, dim=1)
-    Q, E, V = _band.solve(-1*kmag, 1*kmag, N=1000)
-    Ex.append(E)
-Ex = np.moveaxis(np.array(Ex), 1, 2) #moves the axis such as first axis is X pos, second is Q value, and last is the bands n number
 
+
+X = np.linspace(0,2, 100)
+Ey = []
+Q = []
+X5 = np.linspace(0,2, 150)
+fig3, ax3 = plt.subplots()
+counter = 0
+for y in X:
+    print(f"Calculating bands for y = {y}. {len(X)-counter} bands missing")
+    pot_y = lambda x: Sum.tavg_intensity(x, y, 0)
+    _band = band.BandSolver(pot_y, 20, kmag, dim=1)
+
+    ax3.plot(X5, pot_y(X5), label = f"y = {y}")
+
+    Q, E, V = _band.solve(-1*kmag, 1*kmag, N=1000)
+    Ey.append(E)
+    counter += 1
+Ey = np.moveaxis(np.array(Ey), 1, 2) #moves the axis such as first axis is X pos, second is Q value, and last is the bands n number
+
+ax3.legend()
 X1, Q1 = np.meshgrid(X, Q)
 Z = np.zeros((len(X), len(Q)))
 
@@ -65,20 +90,35 @@ ax2 = fig2.add_subplot(111, projection='3d')
 # for i in range(len(X)):
 #     for band in Ex[i,:,:]:
 #         Z[i] = Ex[i,:,0]
-ax2.set_xlabel("X position")
+ax2.set_xlabel("Y position")
 ax2.set_ylabel("Quasi momemtum q, k = 2*pi")
 ax2.set_zlabel("Energy/Er")
 ax2.set_title("Band Structure Cut at y = 0.5")
-for i in range(3):
-    ax2.plot_surface(X1, Q1, Ex[:,:,i].T)
+for i in range(4):
+    ax2.plot_surface(X1,Q1, Ey[:,:,i].T, label = f"n = {i}")
+
+with open("bands_y", 'ab') as file:
+    print("file saved")
+    pickle.dump(Ey, file)
 
 
 
-#fig3, ax3 = plt.subplots()
 
-#X = np.linspace(0,2, 100)
-#ax3.plot(X, pot(X))
+# X = np.linspace(0,2, 100)
 
+
+# def sin_potential(x, V0 = 1.34, ph = 2.345,k = kmag, V1=0.72):
+#     return V0*np.power(np.sin(k*x+ph),2)+V1
+
+# sin_band = band.BandSolver(sin_potential, jmax=20, k=kmag)
+# Qs, Es, Vs = sin_band.solve(-1*kmag, 1*kmag)
+# SIN_P = sin_potential(X)
+# # ax3.plot(X, SIN_P, label = "sinusoidal potential")
+# ax3.legend()
+
+# for i in range(2):
+#     ax2.plot(Qs, Es[i], label=f"sin, n = {i}")
+# ax2.legend()
 # counter = 0
 # nmax = 5
 # for band in E:
@@ -86,6 +126,7 @@ for i in range(3):
 #         break
 #     ax2.plot(Q, band)
 #     counter += 1
+
 plt.show()
 
 
