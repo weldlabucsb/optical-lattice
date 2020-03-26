@@ -99,7 +99,7 @@ class BandSolver:
 
         """
         f_sample = 2 * N
-        t1, dt = np.linspace(0, Tx, f_sample+2, endpoint=False, reststep=True)
+        t1, dt = np.linspace(0, Tx, f_sample+2, endpoint=False, retstep=True)
         t2, dt = np.linspace(0, Ty, f_sample+2, endpoint=False, retstep=True)
 
         T = np.meshgrid(t1, t2)
@@ -202,10 +202,10 @@ class BandSolver:
                     it[0] = V0
                 it.iternext() #next cell
         return np.linalg.eigh(C) #returns the eigen values of the symmetric matrix.
-    def _a(j1,j2, q : np.array):
+    def _a(self, j1,j2, q : np.array):
         qx, qy = q[0], q[1]
-        # j1 -= self.jmax
-        # j2 -= self.jmax
+        j1 -= self.jmax
+        j2 -= self.jmax
         return (qx/self.k+2*j1*self.kx/self.k)**2+(qy/self.k+2*j2*self.ky/self.k)**2+self.Vj[0,0] #in Er scale
     # def filler(self):
     #     C = np.zeros((2*self.jmax+1, 2*self.jmax+1, 2*self.jmax+1), dtype=complex)
@@ -240,9 +240,11 @@ class BandSolver:
         """
         if direction is not None:
             #normalize direction
-            direction = direction/np.norm(direction)
+            direction = direction/np.linalg.norm(direction)
             #shift direction:
-            direction = np.array([direction[0]+self.jmax*self.kx, direction[1]+self.jmax*self.ky])
+            # direction = np.array([direction[0]+self.jmax*self.kx, direction[1]+self.jmax*self.ky])
+            # #normalize:
+            # direction /= np.linalg.norm(direction)
             # qinit = qmin*
             # qfinal = qmax*direction/np.norm(direction)
 
@@ -252,7 +254,7 @@ class BandSolver:
         for q in Q:
             if self.dim == 1:
                 w, v = self._solve1D(q)
-            if sel.dim == 2:
+            if self.dim == 2:
                 w, v = self._solve2D(q*direction)
             perm = np.argsort(w) #finds the permutation to sort w from smallest energy to highest
             E.append(w[perm]) #applies the permutation to both the eigen values and the eigen vectors.
@@ -261,26 +263,28 @@ class BandSolver:
 
 ###Example of use:
 #Potential to be used.
-def sin_potential(x, V0 = 12, k = 1):
-    return V0*np.power(np.sin(k*x),2)
-def sin_potential_2d(x, y, V0 =12, k=1):
-    return V0*np.power(np.sin(k*x)*np.sin(k*y),2)
-k = 1
-m = 1
-ER = ct.hbar**2*k**2/(2*m) #energy scale. It is implied in the class. All energies are in Er.
-#jmax:
-jmax = 10
-direction = np.array([1,1])
-k = np.array([2, 2])
-band = BandSolver(sin_potential_2d, jmax=jmax, kx=k[0], ky=[1], dim=2)
-Q, E, V = band.solve(-1*np.norm(k), 1*np.norm(k))
+# def sin_potential(x, V0 = 12, k = 1):
+#     return V0*np.power(np.sin(k*x),2)
+# def sin_potential_2d(vec, V0 =12, k=1):
+#     x = vec[0]
+#     y = vec[1]
+#     return V0*(np.power(np.sin(k*x),2)+np.power(np.sin(k*y), 2))
+# k = 1
+# m = 1
+# ER = ct.hbar**2*k**2/(2*m) #energy scale. It is implied in the class. All energies are in Er.
+# #jmax:
+# jmax = 5
+# direction = np.array([1,1])
+# k = np.array([2, 2])
+# band = BandSolver(sin_potential_2d, jmax=jmax, kx=k[0], ky=k[1], dim=2)
+# Q, E, V = band.solve(-1*np.linalg.norm(k), 1*np.linalg.norm(k), direction=direction, N=40)
 
-#plotting the first five bands.
-counter = 0
-n=5
-for band in E:
-    if counter > n:
-        break        
-    plt.plot(Q, band)
-    counter += 1
-plt.show()
+# #plotting the first five bands.
+# counter = 0
+# n=5
+# for band in E:
+#     if counter > n:
+#         break        
+#     plt.plot(Q, band)
+#     counter += 1
+# plt.show()
