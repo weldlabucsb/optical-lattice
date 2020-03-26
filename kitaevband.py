@@ -41,7 +41,7 @@ Y = np.arange(2,  step=0.01)
 xx, yy = np.meshgrid(X, Y)
 zz = np.zeros(xx.shape)
 
-Z = Sum.tavg_intensity(xx, yy, 0, savefile="intensity_2D")
+Z = Sum.tavg_intensity(xx, yy, 0, savefile="intensity_2D") #potential
 Y1 = np.linspace(0,1,2)
 
 # fig = plt.figure()
@@ -69,17 +69,45 @@ Q = []
 X5 = np.linspace(0,2, 150)
 fig3, ax3 = plt.subplots()
 counter = 0
-for y in X:
-    print(f"Calculating bands for y = {y}. {len(X)-counter} bands missing")
-    pot_y = lambda x: Sum.tavg_intensity(x, y, 0)
-    _band = band.BandSolver(pot_y, 20, kmag, dim=1)
+direction = np.array([1,1])
+# for y in X:
+#     print(f"Calculating bands for y = {y}. {len(X)-counter} bands missing")
+    
+#     pot_y = lambda vec: Sum.tavg_intensity(vec[0], vec[1], 0)
+#     _band = band.BandSolver(pot_y, 5, kx=kmag, ky=kmag, dim=2)
 
-    ax3.plot(X5, pot_y(X5), label = f"y = {y}")
+#     #ax3.plot(X5, pot_y(X5), label = f"y = {y}")
 
-    Q, E, V = _band.solve(-1*kmag, 1*kmag, N=1000)
-    Ey.append(E)
-    counter += 1
-Ey = np.moveaxis(np.array(Ey), 1, 2) #moves the axis such as first axis is X pos, second is Q value, and last is the bands n number
+#     Q, E, V = _band.solve(-1*kmag, 1*kmag, direction=direction, N=30)
+#     Ey.append(E)
+#     counter += 1
+pot_y = lambda vec: Sum.tavg_intensity(vec[0], vec[1], 0)
+_band = band.BandSolver(pot_y, 5, kx=kmag, ky=kmag, dim=2)
+qx = np.linspace(-1*kmag, kmag, 30)
+xx, yy = np.meshgrid(qx, qx)
+def calculate_band_structure(qxx, qyy):
+    zz = np.empty((qxx.shape[0], qxx.shape[1], (2*_band.jmax+1)**2))
+    pairs = qxx.shape[0]*qyy.shape[0]
+    print(f"Started calculating the energy spectra for {pairs} pairs of qx, qy.")
+    counter = 0
+    for i in range(qxx.shape[0]):
+        for j in range(qyy.shape[0]):
+            eigen, v = _band._solve2D(np.array([qxx[i,j], qyy[i,j]]))
+            perm = np.argsort(eigen)
+            zz[i, j, :] = eigen
+            counter += 1
+            if not counter%100:
+                print(f"Calculated {counter} points out of {pairs}. ({counter/pairs*100:.1f} %)")
+    return zz
+zz = calculate_band_structure(xx, yy)
+
+
+
+#ax3.plot(X5, pot_y(X5), label = f"y = {y}")
+
+#Q, E, V = _band.solve(-1*kmag, 1*kmag, direction=direction, N=30)
+
+# Ey = np.moveaxis(np.array(Ey), 1, 2) #moves the axis such as first axis is X pos, second is Q value, and last is the bands n number
 
 ax3.legend()
 X1, Q1 = np.meshgrid(X, Q)
@@ -90,16 +118,16 @@ ax2 = fig2.add_subplot(111, projection='3d')
 # for i in range(len(X)):
 #     for band in Ex[i,:,:]:
 #         Z[i] = Ex[i,:,0]
-ax2.set_xlabel("Y position")
-ax2.set_ylabel("Quasi momemtum q, k = 2*pi")
+ax2.set_xlabel("Qx")
+ax2.set_ylabel("Quasi momemtum qy, k = 2*pi")
 ax2.set_zlabel("Energy/Er")
-ax2.set_title("Band Structure Cut at y = 0.5")
+ax2.set_title("Band Structure (first 4 bands) for duck potential")
 for i in range(4):
-    ax2.plot_surface(X1,Q1, Ey[:,:,i].T, label = f"n = {i}")
+    ax2.plot_surface(xx,yy, zz[:,:, i], label = f"n = {i}")
 
-with open("bands_y", 'ab') as file:
-    print("file saved")
-    pickle.dump(Ey, file)
+# with open("bands_y", 'ab') as file:
+#     print("file saved")
+#     pickle.dump(Ey, file)
 
 
 
