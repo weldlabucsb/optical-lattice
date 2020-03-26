@@ -224,13 +224,13 @@ class BandSolver:
     #     #             it[0] = V0
     #     #         it.iternext()
 
-    def solve(self, qmin, qmax, N = 100):
+    def solve(self, qmin, qmax, direction = None, N = 100):
         """
         Calculates the bands of the given potential.
         Parameters
         ----------
         qmin: lower bound of q between which the band structure will be calculated. (remember q/k = -1, +1 is the FBZ!)
-        qmax: upper bound of the band calculation.
+        qmax: upper bound of the band calculation. (they are the magnitudes in the 2D case)
         N: points in the calculation.
         Returns
         ----------
@@ -238,6 +238,14 @@ class BandSolver:
         E: Numpy array containing the bands. E[0] is the ground band, E[1] the first excited band and so on.
         V: Numpy array containing the eigen vectors (Cj coefficients) of the wave function.
         """
+        if direction is not None:
+            #normalize direction
+            direction = direction/np.norm(direction)
+            #shift direction:
+            direction = np.array([direction[0]+self.jmax*self.kx, direction[1]+self.jmax*self.ky])
+            # qinit = qmin*
+            # qfinal = qmax*direction/np.norm(direction)
+
         Q = np.linspace(qmin, qmax, N)
         E = []
         V = []
@@ -245,14 +253,14 @@ class BandSolver:
             if self.dim == 1:
                 w, v = self._solve1D(q)
             if sel.dim == 2:
-                w, v = self._solve2D(q)
+                w, v = self._solve2D(q*direction)
             perm = np.argsort(w) #finds the permutation to sort w from smallest energy to highest
             E.append(w[perm]) #applies the permutation to both the eigen values and the eigen vectors.
             V.append(v[perm])
         return (Q, np.array(E).T, np.array(V).T) #transposes the arrays for easy plotting.
 
 ###Example of use:
-Potential to be used.
+#Potential to be used.
 def sin_potential(x, V0 = 12, k = 1):
     return V0*np.power(np.sin(k*x),2)
 def sin_potential_2d(x, y, V0 =12, k=1):
@@ -262,9 +270,10 @@ m = 1
 ER = ct.hbar**2*k**2/(2*m) #energy scale. It is implied in the class. All energies are in Er.
 #jmax:
 jmax = 10
-
-band = BandSolver(sin_potential_2d, jmax=jmax, k=k, dim=2)
-Q, E, V = band.solve(-1*k, 1*k)
+direction = np.array([1,1])
+k = np.array([2, 2])
+band = BandSolver(sin_potential_2d, jmax=jmax, kx=k[0], ky=[1], dim=2)
+Q, E, V = band.solve(-1*np.norm(k), 1*np.norm(k))
 
 #plotting the first five bands.
 counter = 0
