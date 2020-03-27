@@ -100,6 +100,18 @@ class Epwave():
         self.pulsation = w
         self.kvector = kvector
         self.phase = phase
+    @classmethod
+    def angle2kvector(self, angle, unit="deg"):
+        #in the xy plane only
+        if unit == "deg":
+            multiplier = np.pi/180
+        else:
+            multiplier = 1
+        return np.array([np.cos(angle*multiplier),np.sin(angle*multiplier), 0])
+
+    def angle(self):
+        number = self.kvector[0] + self.kvector[1]*1j
+        return np.angle(number)*180/np.pi
     def value(self, t, x,y,z):
         #provides the value of the field at position x, y, z
         r = np.array(x, y, z)

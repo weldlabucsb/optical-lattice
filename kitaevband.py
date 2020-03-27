@@ -10,14 +10,23 @@ import pickle
 #we set lambda = 1 = c thus lambda = 1, kmag = 2*pi, w = 1/(2*pi)
 #k vectors:
 kmag = 2*np.pi
-k1 = kmag*np.array([1,0,0])
-k2 = kmag*np.array([-1,0,0])
-k3 = kmag*np.array([0,1,0])
-k4 = kmag*np.array([0,-1,0])
+# k1 = kmag*np.array([1,0,0])
+# k2 = kmag*np.array([-1,0,0])
+# k3 = kmag*np.array([0,1,0])
+# k4 = kmag*np.array([0,-1,0])
+
+#or you can use a function to get the kvectors from an angle:
+k1 = kmag*op.Epwave.angle2kvector(0)
+k2 = kmag*op.Epwave.angle2kvector(90)
+k3 = kmag*op.Epwave.angle2kvector(180)
+k4 = kmag*op.Epwave.angle2kvector(270)
 #amplitudes:
-e1, e2, e3, e4 = 0.6,1,0.55,1
+#e1, e2, e3, e4 = 0.6,1,0.55,1
+e1, e2, e3, e4 = 1,1,0.6, 0.5
 #phases:
-ph = [0, 90, 0, -75, 45]
+# ph = [0, 90, 0, -75, 45]
+#ph = [0, 0, 90, -70, 45]
+ph = [0, 0, 90, -70, 0]
 ph1, ph2, ph3, ph4, ph5 = list(map(lambda x: x*np.pi/180, ph))
 #polarization:
 p1,p2,p3,p4 = np.array([0,0,1]),np.array([0,0,1]), np.array([0,0,1]), np.array([0,0,1])
@@ -30,13 +39,16 @@ E2 = op.Epwave(e2, p2, w, k2, ph2)
 E3 = op.Epwave(e3, p3, w, k3, ph3)
 E4 = op.Epwave(e4, p4, w, k4, ph4)
 E5 = op.Epwave(e4, p4, w, k4, ph5)
+#print angles:
+print(f"E1: {E1.angle()}, E2: {E2.angle()}, E3: {E3.angle()}, E4: {E4.angle():.1f}")
 #creation of the wave packet.
 Sum = E1+E2+E3+E4
 #rotates all the beams in the wave packet.
-Sum.rotate_beams(90, [0,0,1]) #rotate the beams by 45 degrees around the z axis.
-
-X = np.arange(2, step=0.01)
-Y = np.arange(2,  step=0.01)
+#Sum.rotate_beams(-45, [0,0,1]) #rotate the beams by 45 degrees around the z axis.
+#print angles:
+print(f"E1: {E1.angle()}, E2: {E2.angle()}, E3: {E3.angle()}, E4: {E4.angle():.1f}")
+X = np.arange(3, step=0.01)
+Y = np.arange(3,  step=0.01)
 
 xx, yy = np.meshgrid(X, Y)
 zz = np.zeros(xx.shape)
@@ -57,11 +69,12 @@ print(f"value = {Z}")
 
 fig1 = plt.figure()
 ax1 = fig1.add_subplot(111)
-ax1.contourf(xx, yy, Z)
+im = ax1.pcolormesh(xx, yy, Z)
 ax1.set_title("Potential for the Kitaev Chain")
 ax1.set_xlabel("Position x")
 ax1.set_ylabel("Position y")
-
+fig1.colorbar(im, ax=ax1)
+plt.show()
 
 X = np.linspace(0,2, 100)
 Ey = []
