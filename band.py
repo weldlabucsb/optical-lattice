@@ -113,10 +113,11 @@ class BandSolver:
 
 
 
-    def __init__(self, potential, jmax = 20, kx = 1, ky = 1, kz = 1, dim = 1, debug = False):
+    def __init__(self, potential, V0 = 0.2,jmax = 20, kx = 1, ky = 1, kz = 1, dim = 1, debug = False):
         self.dim = dim
         self.potential = potential #potential should be a function of dimension given
         self.jmax = jmax
+        self.V0 = V0
         if dim ==1:
             self.k = kx
         if dim >= 2:
@@ -146,10 +147,12 @@ class BandSolver:
         if self.dim == 1:
             self.Vj = self.fourier_series_coeff_1D(self.potential, np.pi/self.k, self.jmax)
             self.Vj = np.pad(self.Vj, (0,self.jmax), 'constant', constant_values = (0,))
+            self.Vj = self.Vj/np.abs(self.Vj[0])*self.V0
         if self.dim == 2:
             self.Vj = self.fourier_series_coeff_2D(self.potential, np.pi/self.kx, np.pi/self.ky, self.jmax)
             self.Vj = np.pad(self.Vj, (0, self.jmax), 'constant', constant_values = (0,))
-            
+            self.Vj = self.Vj/np.abs(self.Vj[0,0])*self.V0
+            print(f"V0 = {np.abs(self.Vj[0,0]):.2e}")
         if self.dim > 2:
             print("Higher dimension than 1 is not yet implemented. Please try again another time.")
             #TODO: replace this with a proper error message native to Python.

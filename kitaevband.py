@@ -54,6 +54,7 @@ xx, yy = np.meshgrid(X, Y)
 zz = np.zeros(xx.shape)
 
 Z = Sum.tavg_intensity(xx, yy, 0, savefile="intensity_2D") #potential
+print(f"depth = {np.max(Z):.1e}")
 Y1 = np.linspace(0,1,2)
 
 # fig = plt.figure()
@@ -74,7 +75,7 @@ ax1.set_title("Potential for the Kitaev Chain")
 ax1.set_xlabel("Position x")
 ax1.set_ylabel("Position y")
 fig1.colorbar(im, ax=ax1)
-plt.show()
+plt.show(block=False)
 
 X = np.linspace(0,2, 100)
 Ey = []
@@ -95,8 +96,8 @@ direction = np.array([1,1])
 #     Ey.append(E)
 #     counter += 1
 pot_y = lambda vec: Sum.tavg_intensity(vec[0], vec[1], 0)
-_band = band.BandSolver(pot_y, 5, kx=kmag, ky=kmag, dim=2)
-qx = np.linspace(-1*kmag, kmag, 30)
+_band = band.BandSolver(pot_y, V0=25, jmax=3, kx=kmag, ky=kmag, dim=2)
+qx = np.linspace(-1*kmag, kmag, 20)
 xx, yy = np.meshgrid(qx, qx)
 def calculate_band_structure(qxx, qyy):
     zz = np.empty((qxx.shape[0], qxx.shape[1], (2*_band.jmax+1)**2))
@@ -135,9 +136,11 @@ ax2.set_xlabel("Qx")
 ax2.set_ylabel("Quasi momemtum qy, k = 2*pi")
 ax2.set_zlabel("Energy/Er")
 ax2.set_title("Band Structure (first 4 bands) for duck potential")
+maxval = np.max(zz[:,:,:4])
+minval = np.min(zz[:,:,:4])
 for i in range(4):
-    ax2.plot_surface(xx,yy, zz[:,:, i], label = f"n = {i}")
-
+    im = ax2.plot_surface(xx,yy, zz[:,:, i], label = f"n = {i}", cmap="magma", vmin = minval, vmax=maxval)
+fig2.colorbar(im, ax=ax2)
 # with open("bands_y", 'ab') as file:
 #     print("file saved")
 #     pickle.dump(Ey, file)
